@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   type Dispatch,
   type FormEvent,
@@ -1121,12 +1122,12 @@ function DesktopLanding({ onBook, onNavigate }: DesktopLandingProps) {
           <div className="desktop-hero__copy">
             <p className="desktop-eyebrow">Delivery across Zambia</p>
             <h1 id="desktop-hero-title">
-              Send it today.
-              <span>Move it with confidence.</span>
+              Delivery that keeps
+              <span>Zambia moving.</span>
             </h1>
             <p className="desktop-hero__summary">
-              Reliable doorstep pickup and branch delivery for the parcels that
-              keep life and business moving.
+              From your door to theirs, Thunder Express gives every parcel a
+              clearer and more dependable journey.
             </p>
             <div className="desktop-hero__buttons">
               <button type="button" onClick={onBook}>
@@ -1142,25 +1143,6 @@ function DesktopLanding({ onBook, onNavigate }: DesktopLandingProps) {
             </div>
           </div>
 
-          <div className="desktop-route-scene" aria-hidden="true">
-            <span className="desktop-route-scene__ring desktop-route-scene__ring--one" />
-            <span className="desktop-route-scene__ring desktop-route-scene__ring--two" />
-            <span className="desktop-route-scene__path desktop-route-scene__path--one" />
-            <span className="desktop-route-scene__path desktop-route-scene__path--two" />
-            <span className="desktop-route-scene__pin desktop-route-scene__pin--lusaka" />
-            <span className="desktop-route-scene__pin desktop-route-scene__pin--kabwe" />
-            <span className="desktop-route-scene__pin desktop-route-scene__pin--kitwe" />
-            <span className="desktop-route-scene__label desktop-route-scene__label--lusaka">
-              Lusaka
-            </span>
-            <span className="desktop-route-scene__label desktop-route-scene__label--kabwe">
-              Kabwe
-            </span>
-            <span className="desktop-route-scene__label desktop-route-scene__label--kitwe">
-              Kitwe
-            </span>
-            <span className="desktop-route-scene__parcel">TE</span>
-          </div>
         </div>
 
         <div className="desktop-action-dock" aria-label="Delivery shortcuts">
@@ -1229,7 +1211,85 @@ function DesktopLanding({ onBook, onNavigate }: DesktopLandingProps) {
   );
 }
 
+function DesktopFooter({
+  onBook,
+  onNavigate,
+}: {
+  onBook: () => void;
+  onNavigate: (label: string) => void;
+}) {
+  return (
+    <footer className="desktop-footer hidden lg:block">
+      <div className="desktop-footer__main">
+        <div className="desktop-footer__brand">
+          <button
+            type="button"
+            className="brand-lockup"
+            onClick={onBook}
+            aria-label="Return to booking"
+          >
+            <span>Thunder</span>
+            <span className="brand-bolt" aria-hidden="true" />
+            <span>Express</span>
+          </button>
+          <p>
+            Straightforward parcel delivery for people and businesses across
+            Zambia.
+          </p>
+        </div>
+
+        <div className="desktop-footer__links">
+          <div>
+            <h2>Delivery</h2>
+            <button type="button" onClick={onBook}>
+              Book a delivery
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate("Track Parcel")}
+            >
+              Track a parcel
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate("My Deliveries")}
+            >
+              My deliveries
+            </button>
+          </div>
+
+          <div>
+            <h2>Account</h2>
+            <button type="button" onClick={() => onNavigate("Account")}>
+              Personal information
+            </button>
+            <button type="button" onClick={() => onNavigate("Account")}>
+              Saved addresses
+            </button>
+            <button type="button" onClick={() => onNavigate("Account")}>
+              Payment methods
+            </button>
+          </div>
+
+          <div>
+            <h2>Service</h2>
+            <span>Doorstep pickup</span>
+            <span>Branch drop-off</span>
+            <span>Same-day delivery</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="desktop-footer__bottom">
+        <span>Thunder Express Zambia</span>
+        <span>Fast, flexible and trackable delivery.</span>
+      </div>
+    </footer>
+  );
+}
+
 export default function Home() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("Book a Delivery");
   const [bookingStep, setBookingStep] = useState<BookingStep>(1);
   const [pickupMethod, setPickupMethod] =
@@ -1260,10 +1320,8 @@ export default function Home() {
     setConfirmationVisible(true);
   }
 
-  function scrollToBooking() {
-    document
-      .getElementById("booking")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  function openBookingPage() {
+    router.push("/book");
   }
 
   return (
@@ -1281,29 +1339,17 @@ export default function Home() {
             <span>Express</span>
           </a>
 
-          <nav
-            className="hidden items-center gap-1 lg:flex"
-            aria-label="Desktop navigation"
+          <button
+            type="button"
+            onClick={() => handleNavigation("Account")}
+            className={`desktop-account-link hidden lg:inline-flex ${
+              activeTab === "Account" ? "desktop-account-link--active" : ""
+            }`}
+            aria-current={activeTab === "Account" ? "page" : undefined}
           >
-            {navigation.map((item) => {
-              const isActive = item.label === activeTab;
-
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => handleNavigation(item.label)}
-                  className={`desktop-nav__item ${
-                    isActive ? "desktop-nav__item--active" : ""
-                  }`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <NavIcon name={item.icon} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+            <NavIcon name="account" />
+            <span>Account</span>
+          </button>
         </div>
       </header>
 
@@ -1321,24 +1367,14 @@ export default function Home() {
         ) : (
           <div>
             <DesktopLanding
-              onBook={scrollToBooking}
+              onBook={openBookingPage}
               onNavigate={handleNavigation}
             />
-
-            <div className="desktop-booking-heading hidden lg:flex">
-              <div>
-                <p className="desktop-eyebrow">Ready when you are</p>
-                <h2>Create your delivery</h2>
-              </div>
-              <p>
-                Three clear steps from pickup details to service confirmation.
-              </p>
-            </div>
 
           <form
             id="booking"
             onSubmit={handleSubmit}
-            className="mx-auto max-w-2xl scroll-mt-28 lg:max-w-4xl"
+            className="mx-auto max-w-2xl scroll-mt-28 lg:hidden"
           >
             <section
               className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgb(20_44_63_/_0.11)] sm:p-6 lg:p-8"
@@ -1749,29 +1785,10 @@ export default function Home() {
             </section>
           </form>
 
-            <section
-              className="desktop-strength hidden lg:grid"
-              aria-label="Thunder Express service overview"
-            >
-              <div>
-                <p className="desktop-eyebrow">Built for local movement</p>
-                <h2>From Lusaka to the Copperbelt, without the guesswork.</h2>
-              </div>
-              <dl>
-                <div>
-                  <dt>Pickup</dt>
-                  <dd>Doorstep or branch</dd>
-                </div>
-                <div>
-                  <dt>Service</dt>
-                  <dd>Same-day or next-day</dd>
-                </div>
-                <div>
-                  <dt>Visibility</dt>
-                  <dd>Live parcel updates</dd>
-                </div>
-              </dl>
-            </section>
+            <DesktopFooter
+              onBook={openBookingPage}
+              onNavigate={handleNavigation}
+            />
           </div>
         )}
       </div>
