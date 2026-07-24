@@ -430,12 +430,429 @@ function MyDeliveriesScreen({ onTrack }: { onTrack: () => void }) {
   );
 }
 
+type AccountView = "overview" | "personal" | "addresses" | "payments";
+
+type AccountDetailHeaderProps = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  onBack: () => void;
+};
+
+function AccountDetailHeader({
+  eyebrow,
+  title,
+  description,
+  onBack,
+}: AccountDetailHeaderProps) {
+  return (
+    <div className="account-detail-header">
+      <button type="button" className="account-detail-back" onClick={onBack}>
+        <span aria-hidden="true" />
+        Back to account
+      </button>
+      <div>
+        <p>{eyebrow}</p>
+        <h1>{title}</h1>
+        <span>{description}</span>
+      </div>
+    </div>
+  );
+}
+
 function AccountScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [accountMessage, setAccountMessage] = useState("");
+  const [accountView, setAccountView] = useState<AccountView>("overview");
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [profile, setProfile] = useState({
+    fullName: "Chanda Mwila",
+    phone: "+260 97 000 4587",
+    email: "chanda.mwila@example.com",
+  });
 
   function showAccountMessage(message: string) {
     setAccountMessage(message);
+  }
+
+  function returnToAccount() {
+    setAccountView("overview");
+    setAccountMessage("");
+  }
+
+  if (accountView === "personal") {
+    return (
+      <section aria-label="Personal information">
+        <AccountDetailHeader
+          eyebrow="Your details"
+          title="Personal information"
+          description="Keep your contact details accurate for pickup and delivery updates."
+          onBack={returnToAccount}
+        />
+
+        <div className="account-detail-layout">
+          <aside className="account-profile-summary">
+            <span className="account-profile-summary__avatar" aria-hidden="true">
+              CM
+            </span>
+            <h2>{profile.fullName}</h2>
+            <p>Thunder Express customer</p>
+            <span className="account-verified-badge">
+              <span aria-hidden="true">OK</span>
+              Phone verified
+            </span>
+            <dl>
+              <div>
+                <dt>Account type</dt>
+                <dd>Personal</dd>
+              </div>
+              <div>
+                <dt>Member since</dt>
+                <dd>July 2026</dd>
+              </div>
+            </dl>
+          </aside>
+
+          <form
+            className="account-detail-panel"
+            onSubmit={(event) => {
+              event.preventDefault();
+              showAccountMessage("Personal information saved.");
+            }}
+          >
+            <div className="account-panel-heading">
+              <div>
+                <p>Profile</p>
+                <h2>Contact details</h2>
+              </div>
+              <span>Required for delivery updates</span>
+            </div>
+
+            <div className="account-form-grid">
+              <label className="account-field">
+                <span>Full name</span>
+                <input
+                  type="text"
+                  value={profile.fullName}
+                  onChange={(event) =>
+                    setProfile((current) => ({
+                      ...current,
+                      fullName: event.target.value,
+                    }))
+                  }
+                  autoComplete="name"
+                  required
+                />
+              </label>
+
+              <label className="account-field">
+                <span>Mobile number</span>
+                <input
+                  type="tel"
+                  value={profile.phone}
+                  onChange={(event) =>
+                    setProfile((current) => ({
+                      ...current,
+                      phone: event.target.value,
+                    }))
+                  }
+                  autoComplete="tel"
+                  required
+                />
+              </label>
+
+              <label className="account-field account-field--wide">
+                <span>Email address</span>
+                <input
+                  type="email"
+                  value={profile.email}
+                  onChange={(event) =>
+                    setProfile((current) => ({
+                      ...current,
+                      email: event.target.value,
+                    }))
+                  }
+                  autoComplete="email"
+                  required
+                />
+              </label>
+            </div>
+
+            <div className="account-form-actions">
+              <button type="submit" className="booking-primary-action">
+                Save changes
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <p className="account-screen-message" role="status" aria-live="polite">
+          {accountMessage}
+        </p>
+      </section>
+    );
+  }
+
+  if (accountView === "addresses") {
+    return (
+      <section aria-label="Saved addresses">
+        <AccountDetailHeader
+          eyebrow="Pickup locations"
+          title="Saved addresses"
+          description="Save frequently used locations to make future bookings quicker."
+          onBack={returnToAccount}
+        />
+
+        <div className="account-detail-panel account-detail-panel--wide">
+          <div className="account-panel-heading account-panel-heading--action">
+            <div>
+              <p>Address book</p>
+              <h2>Your saved places</h2>
+            </div>
+            <button
+              type="button"
+              className="account-outline-action"
+              onClick={() => {
+                setShowAddressForm((visible) => !visible);
+                setAccountMessage("");
+              }}
+            >
+              {showAddressForm ? "Cancel" : "Add address"}
+            </button>
+          </div>
+
+          <div className="account-address-grid">
+            <article className="account-address-card">
+              <div className="account-address-card__top">
+                <span className="account-address-mark" aria-hidden="true">
+                  H
+                </span>
+                <span className="account-default-badge">Default</span>
+              </div>
+              <h3>Home</h3>
+              <p>12 Mosi-oa-Tunya Road, Woodlands, Lusaka</p>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => showAccountMessage("Home address selected for editing.")}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => showAccountMessage("Home remains your default address.")}
+                >
+                  Default
+                </button>
+              </div>
+            </article>
+
+            <article className="account-address-card">
+              <div className="account-address-card__top">
+                <span className="account-address-mark" aria-hidden="true">
+                  W
+                </span>
+              </div>
+              <h3>Work</h3>
+              <p>Plot 4587, Cairo Road, Lusaka Central</p>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => showAccountMessage("Work address selected for editing.")}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => showAccountMessage("Work set as the default address.")}
+                >
+                  Set as default
+                </button>
+              </div>
+            </article>
+          </div>
+
+          {showAddressForm && (
+            <form
+              className="account-inline-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setShowAddressForm(false);
+                showAccountMessage("New address saved.");
+              }}
+            >
+              <h3>Add a new address</h3>
+              <div className="account-form-grid">
+                <label className="account-field">
+                  <span>Address label</span>
+                  <input type="text" placeholder="e.g. Parents' home" required />
+                </label>
+                <label className="account-field">
+                  <span>City</span>
+                  <select defaultValue="" required>
+                    <option value="" disabled>
+                      Select city
+                    </option>
+                    <option>Lusaka</option>
+                    <option>Kitwe</option>
+                    <option>Ndola</option>
+                    <option>Chingola</option>
+                  </select>
+                </label>
+                <label className="account-field account-field--wide">
+                  <span>Street address</span>
+                  <input
+                    type="text"
+                    placeholder="House, street and neighbourhood"
+                    autoComplete="street-address"
+                    required
+                  />
+                </label>
+              </div>
+              <div className="account-form-actions">
+                <button type="submit" className="booking-primary-action">
+                  Save address
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        <p className="account-screen-message" role="status" aria-live="polite">
+          {accountMessage}
+        </p>
+      </section>
+    );
+  }
+
+  if (accountView === "payments") {
+    return (
+      <section aria-label="Payment methods">
+        <AccountDetailHeader
+          eyebrow="Payments"
+          title="Payment methods"
+          description="Manage the cards and mobile money accounts used for deliveries."
+          onBack={returnToAccount}
+        />
+
+        <div className="account-detail-panel account-detail-panel--wide">
+          <div className="account-panel-heading account-panel-heading--action">
+            <div>
+              <p>Wallet</p>
+              <h2>Your payment methods</h2>
+            </div>
+            <button
+              type="button"
+              className="account-outline-action"
+              onClick={() => {
+                setShowPaymentForm((visible) => !visible);
+                setAccountMessage("");
+              }}
+            >
+              {showPaymentForm ? "Cancel" : "Add payment method"}
+            </button>
+          </div>
+
+          <div className="account-payment-grid">
+            <article className="account-payment-card">
+              <div className="account-payment-card__top">
+                <span className="account-payment-mark" aria-hidden="true">
+                  AM
+                </span>
+                <span className="account-default-badge">Default</span>
+              </div>
+              <p>Mobile money</p>
+              <h3>Airtel Money</h3>
+              <strong>+260 97 000 4587</strong>
+              <button
+                type="button"
+                onClick={() => showAccountMessage("Airtel Money selected for editing.")}
+              >
+                Manage
+              </button>
+            </article>
+
+            <article className="account-payment-card">
+              <div className="account-payment-card__top">
+                <span className="account-payment-mark" aria-hidden="true">
+                  V
+                </span>
+              </div>
+              <p>Bank card</p>
+              <h3>Visa ending 2048</h3>
+              <strong>Expires 08/29</strong>
+              <button
+                type="button"
+                onClick={() => showAccountMessage("Visa card selected for editing.")}
+              >
+                Manage
+              </button>
+            </article>
+          </div>
+
+          {showPaymentForm && (
+            <form
+              className="account-inline-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setShowPaymentForm(false);
+                showAccountMessage("Payment method added.");
+              }}
+            >
+              <h3>Add a payment method</h3>
+              <div className="account-form-grid">
+                <label className="account-field">
+                  <span>Payment type</span>
+                  <select defaultValue="mobile-money">
+                    <option value="mobile-money">Mobile money</option>
+                    <option value="bank-card">Bank card</option>
+                  </select>
+                </label>
+                <label className="account-field">
+                  <span>Provider</span>
+                  <select defaultValue="">
+                    <option value="" disabled>
+                      Select provider
+                    </option>
+                    <option>Airtel Money</option>
+                    <option>MTN Mobile Money</option>
+                    <option>Zamtel Kwacha</option>
+                    <option>Visa or Mastercard</option>
+                  </select>
+                </label>
+                <label className="account-field account-field--wide">
+                  <span>Mobile or card number</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Enter account number"
+                    required
+                  />
+                </label>
+              </div>
+              <div className="account-form-actions">
+                <button type="submit" className="booking-primary-action">
+                  Add payment method
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="account-security-note">
+            <span aria-hidden="true">S</span>
+            <p>
+              <strong>Payment details stay protected</strong>
+              Your full card and mobile money credentials are never displayed.
+            </p>
+          </div>
+        </div>
+
+        <p className="account-screen-message" role="status" aria-live="polite">
+          {accountMessage}
+        </p>
+      </section>
+    );
   }
 
   return (
@@ -467,7 +884,7 @@ function AccountScreen() {
 
           <button
             type="button"
-            onClick={() => showAccountMessage("Profile editing is ready to open.")}
+            onClick={() => setAccountView("personal")}
             className="min-h-11 rounded-lg border border-[#78aeb5] bg-[#edf7f8] px-5 text-sm font-semibold text-brand-navy transition hover:border-brand-cyan hover:bg-[#e3f3f7]"
           >
             Edit profile
@@ -511,9 +928,7 @@ function AccountScreen() {
             <button
               type="button"
               className="account-list__item"
-              onClick={() =>
-                showAccountMessage("Personal information is ready to review.")
-              }
+              onClick={() => setAccountView("personal")}
             >
               <span className="account-list__icon" aria-hidden="true">
                 ID
@@ -528,9 +943,7 @@ function AccountScreen() {
             <button
               type="button"
               className="account-list__item"
-              onClick={() =>
-                showAccountMessage("Saved addresses are ready to manage.")
-              }
+              onClick={() => setAccountView("addresses")}
             >
               <span className="account-list__icon" aria-hidden="true">
                 A
@@ -545,9 +958,7 @@ function AccountScreen() {
             <button
               type="button"
               className="account-list__item"
-              onClick={() =>
-                showAccountMessage("Payment methods are ready to manage.")
-              }
+              onClick={() => setAccountView("payments")}
             >
               <span className="account-list__icon" aria-hidden="true">
                 ZK
@@ -670,6 +1081,154 @@ function AccountScreen() {
   );
 }
 
+type DesktopLandingProps = {
+  onBook: () => void;
+  onNavigate: (label: string) => void;
+};
+
+function DesktopLanding({ onBook, onNavigate }: DesktopLandingProps) {
+  const quickActions = [
+    {
+      number: "01",
+      title: "Start a booking",
+      detail: "Arrange a pickup or branch drop-off",
+      action: onBook,
+    },
+    {
+      number: "02",
+      title: "Track a parcel",
+      detail: "See the latest delivery update",
+      action: () => onNavigate("Track Parcel"),
+    },
+    {
+      number: "03",
+      title: "My deliveries",
+      detail: "Review active and past parcels",
+      action: () => onNavigate("My Deliveries"),
+    },
+    {
+      number: "04",
+      title: "Manage account",
+      detail: "Update addresses and preferences",
+      action: () => onNavigate("Account"),
+    },
+  ];
+
+  return (
+    <div className="hidden lg:block">
+      <section className="desktop-hero" aria-labelledby="desktop-hero-title">
+        <div className="desktop-hero__surface">
+          <div className="desktop-hero__copy">
+            <p className="desktop-eyebrow">Delivery across Zambia</p>
+            <h1 id="desktop-hero-title">
+              Send it today.
+              <span>Move it with confidence.</span>
+            </h1>
+            <p className="desktop-hero__summary">
+              Reliable doorstep pickup and branch delivery for the parcels that
+              keep life and business moving.
+            </p>
+            <div className="desktop-hero__buttons">
+              <button type="button" onClick={onBook}>
+                Book a delivery
+              </button>
+              <button
+                type="button"
+                className="desktop-hero__secondary"
+                onClick={() => onNavigate("Track Parcel")}
+              >
+                Track a parcel
+              </button>
+            </div>
+          </div>
+
+          <div className="desktop-route-scene" aria-hidden="true">
+            <span className="desktop-route-scene__ring desktop-route-scene__ring--one" />
+            <span className="desktop-route-scene__ring desktop-route-scene__ring--two" />
+            <span className="desktop-route-scene__path desktop-route-scene__path--one" />
+            <span className="desktop-route-scene__path desktop-route-scene__path--two" />
+            <span className="desktop-route-scene__pin desktop-route-scene__pin--lusaka" />
+            <span className="desktop-route-scene__pin desktop-route-scene__pin--kabwe" />
+            <span className="desktop-route-scene__pin desktop-route-scene__pin--kitwe" />
+            <span className="desktop-route-scene__label desktop-route-scene__label--lusaka">
+              Lusaka
+            </span>
+            <span className="desktop-route-scene__label desktop-route-scene__label--kabwe">
+              Kabwe
+            </span>
+            <span className="desktop-route-scene__label desktop-route-scene__label--kitwe">
+              Kitwe
+            </span>
+            <span className="desktop-route-scene__parcel">TE</span>
+          </div>
+        </div>
+
+        <div className="desktop-action-dock" aria-label="Delivery shortcuts">
+          {quickActions.map((item) => (
+            <button key={item.title} type="button" onClick={item.action}>
+              <span className="desktop-action-dock__number">{item.number}</span>
+              <span>
+                <strong>{item.title}</strong>
+                <small>{item.detail}</small>
+              </span>
+              <span className="desktop-action-dock__arrow" aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="desktop-services"
+        aria-labelledby="desktop-services-title"
+      >
+        <div className="desktop-section-heading">
+          <div>
+            <p className="desktop-eyebrow">Everyday delivery</p>
+            <h2 id="desktop-services-title">A simpler way to send</h2>
+          </div>
+          <p>
+            Choose how your parcel starts its journey, where it should arrive,
+            and the speed that works for you.
+          </p>
+        </div>
+
+        <div className="desktop-service-grid">
+          <article>
+            <span className="desktop-service-icon" aria-hidden="true">
+              P
+            </span>
+            <p>01 / Pickup</p>
+            <h3>Doorstep pickup</h3>
+            <span>
+              Enter your home or business address and let us collect from you.
+            </span>
+          </article>
+          <article>
+            <span className="desktop-service-icon" aria-hidden="true">
+              B
+            </span>
+            <p>02 / Drop-off</p>
+            <h3>Branch drop-off</h3>
+            <span>
+              Bring your parcel to a convenient Thunder Express branch.
+            </span>
+          </article>
+          <article>
+            <span className="desktop-service-icon" aria-hidden="true">
+              S
+            </span>
+            <p>03 / Speed</p>
+            <h3>Same-day or next-day</h3>
+            <span>
+              Select the service that fits your delivery window and budget.
+            </span>
+          </article>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Book a Delivery");
   const [bookingStep, setBookingStep] = useState<BookingStep>(1);
@@ -699,6 +1258,12 @@ export default function Home() {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setConfirmationVisible(true);
+  }
+
+  function scrollToBooking() {
+    document
+      .getElementById("booking")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -754,10 +1319,26 @@ export default function Home() {
         ) : activeTab === "Account" ? (
           <AccountScreen />
         ) : (
+          <div>
+            <DesktopLanding
+              onBook={scrollToBooking}
+              onNavigate={handleNavigation}
+            />
+
+            <div className="desktop-booking-heading hidden lg:flex">
+              <div>
+                <p className="desktop-eyebrow">Ready when you are</p>
+                <h2>Create your delivery</h2>
+              </div>
+              <p>
+                Three clear steps from pickup details to service confirmation.
+              </p>
+            </div>
+
           <form
             id="booking"
             onSubmit={handleSubmit}
-            className="mx-auto max-w-2xl lg:max-w-4xl"
+            className="mx-auto max-w-2xl scroll-mt-28 lg:max-w-4xl"
           >
             <section
               className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgb(20_44_63_/_0.11)] sm:p-6 lg:p-8"
@@ -1167,6 +1748,31 @@ export default function Home() {
               </p>
             </section>
           </form>
+
+            <section
+              className="desktop-strength hidden lg:grid"
+              aria-label="Thunder Express service overview"
+            >
+              <div>
+                <p className="desktop-eyebrow">Built for local movement</p>
+                <h2>From Lusaka to the Copperbelt, without the guesswork.</h2>
+              </div>
+              <dl>
+                <div>
+                  <dt>Pickup</dt>
+                  <dd>Doorstep or branch</dd>
+                </div>
+                <div>
+                  <dt>Service</dt>
+                  <dd>Same-day or next-day</dd>
+                </div>
+                <div>
+                  <dt>Visibility</dt>
+                  <dd>Live parcel updates</dd>
+                </div>
+              </dl>
+            </section>
+          </div>
         )}
       </div>
 
