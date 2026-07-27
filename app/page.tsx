@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   type Dispatch,
@@ -1288,10 +1289,16 @@ function DesktopFooter({
         </div>
       </div>
 
-      <div className="desktop-footer__bottom">
+      <div className="desktop-footer__bottom flex items-center justify-between">
         <span>Thunder Express Zambia</span>
-        <span>Fast, flexible and trackable delivery.</span>
+        <div className="flex items-center gap-4">
+          <span>Fast, flexible and trackable delivery.</span>
+          <Link href="/admin" className="text-[#20b6e7] font-semibold hover:underline">
+            Admin Portal ↗
+          </Link>
+        </div>
       </div>
+
     </footer>
   );
 }
@@ -1376,17 +1383,27 @@ export default function Home() {
             <span>Express</span>
           </a>
 
-          <button
-            type="button"
-            onClick={() => handleNavigation("Account")}
-            className={`desktop-account-link hidden lg:inline-flex ${
-              activeTab === "Account" ? "desktop-account-link--active" : ""
-            }`}
-            aria-current={activeTab === "Account" ? "page" : undefined}
-          >
-            <NavIcon name="account" />
-            <span>Account</span>
-          </button>
+          <div className="hidden lg:flex items-center gap-3">
+            <Link
+              href="/admin"
+              className="rounded-lg border border-[#1b3d66] bg-[#0c2445] px-3.5 py-2 text-xs font-bold text-[#20b6e7] transition hover:bg-[#12335e] hover:text-white"
+            >
+              Admin Portal ↗
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => handleNavigation("Account")}
+              className={`desktop-account-link ${
+                activeTab === "Account" ? "desktop-account-link--active" : ""
+              }`}
+              aria-current={activeTab === "Account" ? "page" : undefined}
+            >
+              <NavIcon name="account" />
+              <span>Account</span>
+            </button>
+          </div>
+
         </div>
       </header>
 
