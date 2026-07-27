@@ -12,11 +12,19 @@ import {
 } from "react";
 
 type NavIconName = "parcel" | "search" | "deliveries" | "account";
-type BookingStep = 1 | 2 | 3;
+type BookingStep = 1 | 2 | 3 | 4 | 5;
 type PickupMethod = "branch" | "doorstep";
 type DeliveryType = "branch" | "doorstep";
 type DeliverySpeed = "same-day" | "next-day";
 type DeliveryFilter = "all" | "active" | "completed";
+
+const mobileBookingSteps: [number, string][] = [
+  [1, "Pickup"],
+  [2, "Details"],
+  [3, "Parcel"],
+  [4, "Destination"],
+  [5, "Service"],
+];
 
 const navigation: Array<{ label: string; icon: NavIconName }> = [
   { label: "Book a Delivery", icon: "parcel" },
@@ -1292,18 +1300,41 @@ export default function Home() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Book a Delivery");
   const [bookingStep, setBookingStep] = useState<BookingStep>(1);
-  const [pickupMethod, setPickupMethod] =
-    useState<PickupMethod>("doorstep");
+
+  // Step 1 — Pickup
+  const [pickupMethod, setPickupMethod] = useState<PickupMethod>("doorstep");
   const [pickupAddress, setPickupAddress] = useState("");
   const [sendFrom, setSendFrom] = useState("lusaka-downtown");
+
+  // Step 2 — Sender details
+  const [senderName, setSenderName] = useState("");
+  const [senderPhone, setSenderPhone] = useState("");
+
+  // Step 3 — Parcel info
+  const [parcelItem, setParcelItem] = useState("");
+  const [parcelDescription, setParcelDescription] = useState("");
+  const [parcelValue, setParcelValue] = useState("");
+  const [parcelPhotoUrl, setParcelPhotoUrl] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // Step 4 — Destination + Receiver
   const [sendTo, setSendTo] = useState("");
-  const [deliveryType, setDeliveryType] =
-    useState<DeliveryType>("doorstep");
-  const [deliverySpeed, setDeliverySpeed] =
-    useState<DeliverySpeed>("same-day");
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>("doorstep");
+  const [receiverName, setReceiverName] = useState("");
+  const [receiverPhone, setReceiverPhone] = useState("");
+
+  // Step 5 — Service
+  const [deliverySpeed, setDeliverySpeed] = useState<DeliverySpeed>("same-day");
+
   const [trackingNumber, setTrackingNumber] = useState("");
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const trackingInputRef = useRef<HTMLInputElement>(null);
+
+  const mobileContinueDisabled =
+    (bookingStep === 1 && pickupMethod === "doorstep" && !pickupAddress.trim()) ||
+    (bookingStep === 2 && (!senderName.trim() || !senderPhone.trim())) ||
+    (bookingStep === 3 && (!parcelItem.trim() || !parcelDescription.trim() || !parcelValue.trim())) ||
+    (bookingStep === 4 && (!sendTo || !receiverName.trim() || !receiverPhone.trim()));
 
   useEffect(() => {
     if (activeTab === "Track Parcel") {
@@ -1322,6 +1353,12 @@ export default function Home() {
 
   function openBookingPage() {
     router.push("/book");
+  }
+
+  function handleParcelPhoto(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setParcelPhotoUrl(URL.createObjectURL(file));
   }
 
   return (
@@ -1380,7 +1417,7 @@ export default function Home() {
               className="rounded-2xl bg-white p-4 shadow-[0_8px_24px_rgb(20_44_63_/_0.11)] sm:p-6 lg:p-8"
               aria-label="Book a delivery"
             >
-              <div className="mb-5 flex items-start justify-between gap-4 lg:items-center">
+              <div className="mb-3 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[0.65rem] font-bold tracking-[0.13em] text-[#75818a] uppercase">
                     New booking
@@ -1390,19 +1427,16 @@ export default function Home() {
                   </h1>
                 </div>
                 <span className="shrink-0 rounded-full bg-[#edf3f5] px-3 py-1.5 text-xs font-semibold text-[#64737c]">
-                  Step {bookingStep} of 3
+                  Step {bookingStep} of 5
                 </span>
               </div>
 
+
               <ol
-                className="booking-stepper lg:mx-auto lg:max-w-2xl"
+                className="booking-stepper-5 mt-5"
                 aria-label="Booking progress"
               >
-                {[
-                  [1, "Pickup"],
-                  [2, "Destination"],
-                  [3, "Service"],
-                ].map(([step, label]) => {
+                {mobileBookingSteps.map(([step, label]) => {
                   const stepNumber = step as BookingStep;
                   const isActiveStep = bookingStep === stepNumber;
                   const isCompletedStep = bookingStep > stepNumber;
@@ -1424,11 +1458,11 @@ export default function Home() {
                 })}
               </ol>
 
-              <div className="mt-7 min-h-[260px] lg:mt-8 lg:min-h-[290px]">
+              <div className="mt-7 min-h-[260px]">
+                {/* Step 1 — Pickup */}
                 {bookingStep === 1 && (
                 <fieldset>
                   <legend
-                    id="pickup-options-title"
                     className="mb-3 text-[0.98rem] font-semibold text-[#22262b]"
                   >
                     Pickup option
@@ -1450,9 +1484,7 @@ export default function Home() {
                         onChange={() => setPickupMethod("doorstep")}
                         className="sr-only"
                       />
-                      <span className="pickup-option__mark" aria-hidden="true">
-                        P
-                      </span>
+                      <span className="pickup-option__mark" aria-hidden="true">P</span>
                       <span>
                         <strong>Doorstep pickup</strong>
                         <small>We collect from you</small>
@@ -1474,9 +1506,7 @@ export default function Home() {
                         onChange={() => setPickupMethod("branch")}
                         className="sr-only"
                       />
-                      <span className="pickup-option__mark" aria-hidden="true">
-                        B
-                      </span>
+                      <span className="pickup-option__mark" aria-hidden="true">B</span>
                       <span>
                         <strong>Branch drop-off</strong>
                         <small>Bring the parcel to us</small>
@@ -1485,7 +1515,7 @@ export default function Home() {
                     </div>
 
                 {pickupMethod === "branch" ? (
-                  <div className="form-field mt-4 lg:mt-0">
+                  <div className="form-field mt-4">
                     <label htmlFor="send-from">Pickup branch</label>
                     <div className="select-wrap">
                       <select
@@ -1493,38 +1523,28 @@ export default function Home() {
                         value={sendFrom}
                         onChange={(event) => setSendFrom(event.target.value)}
                       >
-                        <option value="lusaka-downtown">
-                          Lusaka Branch - Downtown
-                        </option>
-                        <option value="lusaka-cairo-road">
-                          Lusaka Branch - Cairo Road
-                        </option>
-                        <option value="kitwe-central">
-                          Kitwe Branch - Central
-                        </option>
+                        <option value="lusaka-downtown">Lusaka Branch - Downtown</option>
+                        <option value="lusaka-cairo-road">Lusaka Branch - Cairo Road</option>
+                        <option value="kitwe-central">Kitwe Branch - Central</option>
                       </select>
                     </div>
                   </div>
                 ) : (
-                  <div className="form-field mt-4 lg:mt-0">
+                  <div className="form-field mt-4">
                     <label htmlFor="pickup-address">Pickup address</label>
                     <div className="pickup-address-controls">
                       <input
                         id="pickup-address"
                         type="text"
                         value={pickupAddress}
-                        onChange={(event) =>
-                          setPickupAddress(event.target.value)
-                        }
+                        onChange={(event) => setPickupAddress(event.target.value)}
                         placeholder="Home or business address"
                         autoComplete="street-address"
                         required
                       />
                       <button
                         type="button"
-                        onClick={() =>
-                          setPickupAddress("Current location selected")
-                        }
+                        onClick={() => setPickupAddress("Current location selected")}
                       >
                         Use current location
                       </button>
@@ -1538,17 +1558,202 @@ export default function Home() {
                 </fieldset>
                 )}
 
+                {/* Step 2 — Sender details */}
                 {bookingStep === 2 && (
+                  <fieldset>
+                    <legend className="mb-1 text-xl font-semibold tracking-[-0.02em] text-brand-navy">
+                      Your contact details
+                    </legend>
+                    <p className="mb-5 text-sm text-[#6f7b83]">
+                      We need your name and phone to reach you about the
+                      collection. No account required.
+                    </p>
+                    <div className="grid gap-5">
+                      <div className="booking-input-group">
+                        <label htmlFor="m-sender-name">
+                          <span className="booking-input-label">Full name</span>
+                        </label>
+                        <input
+                          id="m-sender-name"
+                          type="text"
+                          value={senderName}
+                          onChange={(e) => setSenderName(e.target.value)}
+                          placeholder="e.g. Chanda Mwila"
+                          autoComplete="name"
+                          required
+                          className="booking-text-input"
+                        />
+                      </div>
+                      <div className="booking-input-group">
+                        <label htmlFor="m-sender-phone">
+                          <span className="booking-input-label">Phone number</span>
+                        </label>
+                        <input
+                          id="m-sender-phone"
+                          type="tel"
+                          value={senderPhone}
+                          onChange={(e) => setSenderPhone(e.target.value)}
+                          placeholder="e.g. +260 97 000 4587"
+                          autoComplete="tel"
+                          required
+                          className="booking-text-input"
+                        />
+                        <p className="booking-input-hint">
+                          We&apos;ll send tracking updates to this number.
+                        </p>
+                      </div>
+                    </div>
+                  </fieldset>
+                )}
+
+                {/* Step 3 — Parcel info */}
+                {bookingStep === 3 && (
+                  <fieldset>
+                    <legend className="mb-1 text-xl font-semibold tracking-[-0.02em] text-brand-navy">
+                      About the parcel
+                    </legend>
+                    <p className="mb-5 text-sm text-[#6f7b83]">
+                      Tell us what you&apos;re sending so we can handle it safely.
+                    </p>
+                    <div className="grid gap-5">
+                      <div className="booking-input-group">
+                        <label htmlFor="m-parcel-item">
+                          <span className="booking-input-label">What is it?</span>
+                        </label>
+                        <input
+                          id="m-parcel-item"
+                          type="text"
+                          value={parcelItem}
+                          onChange={(e) => setParcelItem(e.target.value)}
+                          placeholder="e.g. Laptop, Clothing, Documents"
+                          required
+                          className="booking-text-input"
+                        />
+                      </div>
+                      <div className="booking-input-group">
+                        <label htmlFor="m-parcel-value">
+                          <span className="booking-input-label">Declared value (ZMW)</span>
+                        </label>
+                        <div className="booking-value-wrap">
+                          <span className="booking-value-prefix" aria-hidden="true">K</span>
+                          <input
+                            id="m-parcel-value"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={parcelValue}
+                            onChange={(e) => setParcelValue(e.target.value)}
+                            placeholder="0.00"
+                            required
+                            className="booking-text-input booking-text-input--prefixed"
+                          />
+                        </div>
+                        <p className="booking-input-hint">Used for insurance purposes only.</p>
+                      </div>
+                      <div className="booking-input-group">
+                        <label htmlFor="m-parcel-description">
+                          <span className="booking-input-label">Description</span>
+                        </label>
+                        <textarea
+                          id="m-parcel-description"
+                          value={parcelDescription}
+                          onChange={(e) => setParcelDescription(e.target.value)}
+                          placeholder="Brief description, quantity, and any special handling notes…"
+                          rows={3}
+                          required
+                          className="booking-textarea"
+                        />
+                      </div>
+                      <div className="booking-input-group">
+                        <span className="booking-input-label">Parcel photo</span>
+                        <p className="booking-input-hint" style={{ marginBottom: "10px" }}>
+                          Take a clear photo before we collect it.
+                        </p>
+                        {parcelPhotoUrl ? (
+                          <div className="parcel-photo-preview">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={parcelPhotoUrl} alt="Parcel photo preview" />
+                            <button
+                              type="button"
+                              className="parcel-photo-retake"
+                              onClick={() => {
+                                setParcelPhotoUrl(null);
+                                if (photoInputRef.current) photoInputRef.current.value = "";
+                              }}
+                            >
+                              Retake photo
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="parcel-photo-upload" htmlFor="m-parcel-photo">
+                            <span className="parcel-photo-upload__icon" aria-hidden="true" />
+                            <strong>Take a photo or upload from your device</strong>
+                            <small>Tap to open camera or choose a file</small>
+                            <input
+                              ref={photoInputRef}
+                              id="m-parcel-photo"
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              onChange={handleParcelPhoto}
+                              className="sr-only"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </fieldset>
+                )}
+
+                {/* Step 4 — Destination */}
+                {bookingStep === 4 && (
                   <fieldset>
                     <legend className="mb-1 text-xl font-semibold tracking-[-0.02em] text-brand-navy">
                       Where is it going?
                     </legend>
                     <p className="mb-5 text-sm text-[#6f7b83]">
-                      Choose the destination and how the recipient will receive
-                      the parcel.
+                      Choose the destination, how the recipient will receive the
+                      parcel, and their contact details.
                     </p>
 
-                    <div className="lg:grid lg:grid-cols-2 lg:gap-8">
+                    <div className="grid gap-5">
+                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <div className="booking-input-group">
+                          <label htmlFor="m-receiver-name">
+                            <span className="booking-input-label">Receiver&apos;s full name</span>
+                          </label>
+                          <input
+                            id="m-receiver-name"
+                            type="text"
+                            value={receiverName}
+                            onChange={(e) => setReceiverName(e.target.value)}
+                            placeholder="e.g. Mutale Banda"
+                            autoComplete="off"
+                            required
+                            className="booking-text-input"
+                          />
+                        </div>
+
+                        <div className="booking-input-group">
+                          <label htmlFor="m-receiver-phone">
+                            <span className="booking-input-label">Receiver&apos;s phone number</span>
+                          </label>
+                          <input
+                            id="m-receiver-phone"
+                            type="tel"
+                            value={receiverPhone}
+                            onChange={(e) => setReceiverPhone(e.target.value)}
+                            placeholder="e.g. +260 97 000 1234"
+                            autoComplete="off"
+                            required
+                            className="booking-text-input"
+                          />
+                          <p className="booking-input-hint">
+                            We&apos;ll notify them when their parcel is on the way.
+                          </p>
+                        </div>
+                      </div>
+
                       <div className="form-field">
                         <label htmlFor="send-to">Destination</label>
                         <div className="select-wrap">
@@ -1558,34 +1763,20 @@ export default function Home() {
                             onChange={(event) => setSendTo(event.target.value)}
                             required
                           >
-                            <option value="" disabled>
-                              Select destination
-                            </option>
-                            <option value="kitwe-doorstep">
-                              Kitwe - Doorstep
-                            </option>
-                            <option value="ndola-branch">
-                              Ndola Branch - Central
-                            </option>
-                            <option value="chingola-doorstep">
-                              Chingola - Doorstep
-                            </option>
+                            <option value="" disabled>Select destination</option>
+                            <option value="kitwe-doorstep">Kitwe - Doorstep</option>
+                            <option value="ndola-branch">Ndola Branch - Central</option>
+                            <option value="chingola-doorstep">Chingola - Doorstep</option>
                           </select>
                         </div>
                       </div>
 
-                      <div className="mt-5 lg:mt-0">
+                      <div>
                         <p className="mb-3 text-[0.98rem] font-semibold text-[#22262b]">
                           Delivery method
                         </p>
                         <div className="grid grid-cols-2 gap-3">
-                          <label
-                            className={`pickup-option ${
-                              deliveryType === "branch"
-                                ? "pickup-option--selected"
-                                : ""
-                            }`}
-                          >
+                          <label className={`pickup-option ${deliveryType === "branch" ? "pickup-option--selected" : ""}`}>
                             <input
                               type="radio"
                               name="delivery-type"
@@ -1594,25 +1785,14 @@ export default function Home() {
                               onChange={() => setDeliveryType("branch")}
                               className="sr-only"
                             />
-                            <span
-                              className="pickup-option__mark"
-                              aria-hidden="true"
-                            >
-                              B
-                            </span>
+                            <span className="pickup-option__mark" aria-hidden="true">B</span>
                             <span>
                               <strong>Branch collection</strong>
                               <small>Recipient collects it</small>
                             </span>
                           </label>
 
-                          <label
-                            className={`pickup-option ${
-                              deliveryType === "doorstep"
-                                ? "pickup-option--selected"
-                                : ""
-                            }`}
-                          >
+                          <label className={`pickup-option ${deliveryType === "doorstep" ? "pickup-option--selected" : ""}`}>
                             <input
                               type="radio"
                               name="delivery-type"
@@ -1621,12 +1801,7 @@ export default function Home() {
                               onChange={() => setDeliveryType("doorstep")}
                               className="sr-only"
                             />
-                            <span
-                              className="pickup-option__mark"
-                              aria-hidden="true"
-                            >
-                              D
-                            </span>
+                            <span className="pickup-option__mark" aria-hidden="true">D</span>
                             <span>
                               <strong>Doorstep delivery</strong>
                               <small>We deliver to them</small>
@@ -1638,7 +1813,8 @@ export default function Home() {
                   </fieldset>
                 )}
 
-                {bookingStep === 3 && (
+                {/* Step 5 — Service & Review */}
+                {bookingStep === 5 && (
                   <fieldset>
                     <legend className="mb-1 text-xl font-semibold tracking-[-0.02em] text-brand-navy">
                       Choose a service
@@ -1647,15 +1823,9 @@ export default function Home() {
                       Select a delivery speed, then review your choices.
                     </p>
 
-                    <div className="lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-8">
+                    <div>
                     <div className="grid grid-cols-2 gap-3">
-                      <label
-                        className={`speed-card ${
-                          deliverySpeed === "same-day"
-                            ? "speed-card--selected"
-                            : ""
-                        }`}
-                      >
+                      <label className={`speed-card ${deliverySpeed === "same-day" ? "speed-card--selected" : ""}`}>
                         <span>
                           <strong>Same-Day Delivery</strong>
                           <small>Est. 125 min</small>
@@ -1670,13 +1840,7 @@ export default function Home() {
                         />
                       </label>
 
-                      <label
-                        className={`speed-card ${
-                          deliverySpeed === "next-day"
-                            ? "speed-card--selected"
-                            : ""
-                        }`}
-                      >
+                      <label className={`speed-card ${deliverySpeed === "next-day" ? "speed-card--selected" : ""}`}>
                         <span>
                           <strong>Next-Day Delivery</strong>
                           <small>Est. 150 min</small>
@@ -1692,13 +1856,28 @@ export default function Home() {
                       </label>
                     </div>
 
-                    <dl className="booking-review mt-6 lg:mt-0">
+                    <dl className="booking-review mt-6">
+                      <div>
+                        <dt>Sender</dt>
+                        <dd>{senderName} · {senderPhone}</dd>
+                      </div>
+                      <div>
+                        <dt>Receiver</dt>
+                        <dd>{receiverName} · {receiverPhone}</dd>
+                      </div>
                       <div>
                         <dt>Pickup</dt>
                         <dd>
                           {pickupMethod === "branch"
                             ? branchLabels[sendFrom]
                             : pickupAddress}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Parcel</dt>
+                        <dd>
+                          {parcelItem}
+                          {parcelValue ? ` · K${Number(parcelValue).toLocaleString()}` : ""}
                         </dd>
                       </div>
                       <div>
@@ -1715,12 +1894,17 @@ export default function Home() {
                       </div>
                       <div>
                         <dt>Service</dt>
-                        <dd>
-                          {deliverySpeed === "same-day"
-                            ? "Same-Day"
-                            : "Next-Day"}
-                        </dd>
+                        <dd>{deliverySpeed === "same-day" ? "Same-Day" : "Next-Day"}</dd>
                       </div>
+                      {parcelPhotoUrl && (
+                        <div className="booking-review__photo">
+                          <dt>Parcel photo</dt>
+                          <dd>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={parcelPhotoUrl} alt="Parcel" className="booking-review__photo-thumb" />
+                          </dd>
+                        </div>
+                      )}
                     </dl>
                     </div>
                   </fieldset>
@@ -1731,9 +1915,7 @@ export default function Home() {
                 {bookingStep > 1 ? (
                   <button
                     type="button"
-                    onClick={() =>
-                      setBookingStep(bookingStep === 3 ? 2 : 1)
-                    }
+                    onClick={() => setBookingStep((bookingStep - 1) as BookingStep)}
                     className="min-h-11 rounded-lg border border-[#c8d2d7] bg-white px-5 text-sm font-semibold text-brand-navy transition hover:bg-[#f3f6f7]"
                   >
                     Back
@@ -1742,31 +1924,18 @@ export default function Home() {
                   <span />
                 )}
 
-                {bookingStep === 1 && (
+                {bookingStep < 5 && (
                   <button
                     type="button"
-                    onClick={() => setBookingStep(2)}
-                    disabled={
-                      pickupMethod === "doorstep" && !pickupAddress.trim()
-                    }
+                    onClick={() => setBookingStep((bookingStep + 1) as BookingStep)}
+                    disabled={mobileContinueDisabled}
                     className="booking-primary-action"
                   >
                     Continue
                   </button>
                 )}
 
-                {bookingStep === 2 && (
-                  <button
-                    type="button"
-                    onClick={() => setBookingStep(3)}
-                    disabled={!sendTo}
-                    className="booking-primary-action"
-                  >
-                    Continue
-                  </button>
-                )}
-
-                {bookingStep === 3 && (
+                {bookingStep === 5 && (
                   <button type="submit" className="booking-primary-action">
                     Confirm booking
                   </button>
@@ -1780,7 +1949,7 @@ export default function Home() {
                 role="status"
                 aria-live="polite"
               >
-                Booking details are ready to review.
+                Booking confirmed! Tracking updates will be sent to {senderPhone || "your phone"}.
               </p>
             </section>
           </form>
